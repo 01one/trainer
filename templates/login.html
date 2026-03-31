@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="corporate">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Auth</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="bg-base-200 flex items-center justify-center min-h-screen">
+    <div class="card w-96 bg-base-100 shadow-2xl rounded-2xl">
+        <div class="card-body text-center p-10">
+            <h2 class="text-3xl font-bold mb-6 text-base-content">Admin Login</h2>
+            {% if error %}<div class="alert alert-error mb-4 shadow-sm text-sm p-3">{{ error }}</div>{% endif %}
+            <form method="post" action="/login" class="flex flex-col gap-4">
+                <input type="text" name="username" placeholder="Username (admin)" class="input input-bordered w-full" required>
+                <input type="password" name="password" placeholder="Password (password)" class="input input-bordered w-full" required>
+                <button type="submit" class="btn btn-primary mt-2">Secure Login</button>
+            </form>
+            <a href="/" class="link link-hover text-sm mt-6 text-base-content/60">Return to Portal</a>
+        </div>
+    </div>
+</body>
+</html>
+

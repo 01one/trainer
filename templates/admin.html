@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Course Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@5/tinymce.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen">
+<div id="adminApp" class="flex flex-col h-screen">
+    
+
+    <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center z-10">
+        <h1 class="text-2xl font-bold text-blue-900"><i class="fas fa-layer-group text-blue-600 mr-2"></i> Tutorial Builder</h1>
+        <div class="space-x-4">
+            <button v-if="editing" @click="editing = false" class="text-gray-500 hover:text-gray-800 font-medium">Cancel</button>
+            <button v-if="editing" @click="saveTutorial" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-all">Save Tutorial</button>
+            <a href="/logout" class="text-red-500 hover:text-red-700 font-medium ml-4 border-l pl-4 border-gray-300">Logout</a>
+        </div>
+    </header>
+
+
+    <main class="flex-1 overflow-auto p-8">
+        
+
+        <div v-if="!editing" class="max-w-6xl mx-auto">
+            <button @click="createNew" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:-translate-y-1 transition-all mb-8">
+                + Create New Tutorial
+            </button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="tut in tutorials" :key="tut.id" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col">
+                    <h2 class="text-xl font-bold mb-2">[[ tut.title ]]</h2>
+                    <p class="text-gray-500 mb-6">[[ tut.steps.length ]] Interactive Steps</p>
+                    <div class="mt-auto flex justify-between items-center pt-4 border-t border-gray-100">
+                        <button @click="deleteTutorial(tut.id)" class="text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors"><i class="fas fa-trash"></i></button>
+                        <button @click="editTutorial(tut)" class="bg-blue-50 text-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Edit Content</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div v-if="editing" class="max-w-6xl mx-auto space-y-8 pb-20">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <label class="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Tutorial Title</label>
+                <input type="text" v-model="formData.title" class="w-full text-3xl font-bold border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-blue-600 px-0 py-2 bg-transparent transition-colors" placeholder="e.g. R&D Team Onboarding">
+            </div>
+
+            <div v-for="(step, index) in formData.steps" :key="index" class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-gray-700">Step [[ index + 1 ]]</h3>
+                    <div class="space-x-2">
+                        <button @click="moveStepUp(index)" :disabled="index === 0" class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-arrow-up"></i></button>
+                        <button @click="moveStepDown(index)" :disabled="index === formData.steps.length - 1" class="text-gray-400 hover:text-blue-600 disabled:opacity-30"><i class="fas fa-arrow-down"></i></button>
+                        <button @click="removeStep(index)" class="text-red-400 hover:text-red-600 ml-4"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                    <div class="lg:col-span-1 border-r border-gray-100 pr-4">
+                        <label class="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-2 text-blue-600"><i class="fas fa-comment-dots mr-1"></i> Sidebar Instructions</label>
+                        <p class="text-xs text-gray-400 mb-3">This text guides the user on what to do.</p>
+                        <tinymce-editor v-model="step.instruction" height="250"></tinymce-editor>
+                    </div>
+                    
+
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-bold text-gray-500 uppercase tracking-wide mb-2"><i class="fas fa-desktop mr-1"></i> Main App Mockup</label>
+                        <p class="text-xs text-gray-400 mb-3">Highlight text and click <strong>⚡ Add Hotspot</strong> to link it. Click inside an existing hotspot and click <strong>🚫 Remove</strong> to unmark it.</p>
+                        <tinymce-editor v-model="step.mockup" height="400" with-hotspot="true"></tinymce-editor>
+                    </div>
+                </div>
+            </div>
+
+            <button @click="addStep" class="w-full py-6 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-bold hover:border-blue-500 hover:text-blue-600 transition-colors bg-white hover:bg-blue-50">
+                <i class="fas fa-plus-circle text-xl mb-2 block"></i> Add Next Step
+            </button>
+        </div>
+    </main>
+</div>
+
+<script>
+    const app = Vue.createApp({
+        compilerOptions: { delimiters: ['[[', ']]'] },
+        data() { return { tutorials: [], editing: false, formData: null } },
+        mounted() { this.fetchTutorials(); },
+        methods: {
+            async fetchTutorials() {
+                const res = await fetch('/api/tutorials');
+                this.tutorials = await res.json();
+            },
+            createNew() {
+                this.formData = { id: null, title: 'New Tutorial', steps: [{ instruction: '', mockup: '' }] };
+                this.editing = true;
+            },
+            editTutorial(tut) {
+                this.formData = JSON.parse(JSON.stringify(tut));
+                this.editing = true;
+            },
+            addStep() { this.formData.steps.push({ instruction: '', mockup: '' }); },
+            removeStep(i) { this.formData.steps.splice(i, 1); },
+            moveStepUp(i) { if(i>0) { const temp = this.formData.steps[i]; this.formData.steps[i] = this.formData.steps[i-1]; this.formData.steps[i-1] = temp; } },
+            moveStepDown(i) { if(i<this.formData.steps.length-1) { const temp = this.formData.steps[i]; this.formData.steps[i] = this.formData.steps[i+1]; this.formData.steps[i+1] = temp; } },
+            async saveTutorial() {
+                await fetch('/api/tutorials', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(this.formData) });
+                this.editing = false; this.fetchTutorials();
+            },
+            async deleteTutorial(id) {
+                if(confirm('Delete this tutorial?')) { await fetch(`/api/tutorials/${id}`, { method: 'DELETE' }); this.fetchTutorials(); }
+            }
+        }
+    });
+
+    app.component('tinymce-editor', {
+        props: ['modelValue', 'height', 'withHotspot'],
+        template: `<textarea :id="id"></textarea>`,
+        data() { return { id: 'editor-' + Math.random().toString(36).substr(2, 9) } },
+        mounted() {
+            const vm = this;
+            tinymce.init({
+                selector: `#${this.id}`,
+                height: this.height || 300, menubar: false, plugins: 'lists link code visualblocks code',
+                toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | code' + (this.withHotspot ? ' | addHotspot removeHotspot' : ''),
+                setup: function (editor) {
+                    if (vm.withHotspot) {
+                        editor.ui.registry.addButton('addHotspot', {
+                            text: '⚡ Add Hotspot',
+                            tooltip: 'Make element clickable to jump to a step',
+                            onAction: function () {
+                                const content = editor.selection.getContent() || 'Click Here';
+                                const target = prompt("Which step number should this go?\n(Leave empty to just go to the 'Next Step')");
+                                
+                                // If user clicked cancel on prompt, abort.
+                                if (target === null) return; 
+
+                                const targetAttr = target.trim() !== "" ? `data-target-step="${target}"` : "";
+                                
+                                editor.selection.setContent(`<span class="interactive-hotspot" style="border: 2px dashed #3b82f6; padding: 4px; border-radius: 4px; cursor: pointer;" ${targetAttr}>${content}</span>`);
+                            }
+                        });
+
+                        editor.ui.registry.addButton('removeHotspot', {
+                            text: '🚫 Remove',
+                            tooltip: 'Remove hotspot linking from selected area',
+                            onAction: function () {
+                                const node = editor.selection.getNode();
+                                // Find if the cursor is inside a hotspot
+                                const hotspot = editor.dom.getParent(node, '.interactive-hotspot');
+                                if (hotspot) {
+                                    // Removes the wrapper, keeps the text inside it
+                                    editor.dom.remove(hotspot, true);
+                                } else {
+                                    alert("Please click your cursor inside an existing hotspot to remove it.");
+                                }
+                            }
+                        });
+                    }
+                    editor.on('Change KeyUp', () => vm.$emit('update:modelValue', editor.getContent()));
+                    editor.on('init', () => editor.setContent(vm.modelValue || ''));
+                }
+            });
+        },
+        watch: { modelValue(newVal) { const ed = tinymce.get(this.id); if(ed && ed.getContent() !== newVal) ed.setContent(newVal || ''); } },
+        beforeUnmount() { if(tinymce.get(this.id)) tinymce.get(this.id).remove(); }
+    });
+
+    app.mount('#adminApp');
+</script>
+</body>
+</html>

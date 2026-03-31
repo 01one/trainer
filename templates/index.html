@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="corporate">
+<head>
+    <meta charset="UTF-8">
+    <title>Training Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-base-200 min-h-screen font-sans">
+    <div class="hero bg-neutral text-neutral-content py-20 mb-10 shadow-lg">
+        <div class="hero-content text-center">
+            <div class="max-w-xl">
+                <h1 class="text-5xl font-bold mb-4">Interactive Training</h1>
+                <p class="text-lg opacity-80">Select your assigned interactive scenario below to begin learning.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 max-w-5xl">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for tut in tutorials %}
+            <div class="card bg-base-100 shadow-xl hover:-translate-y-2 transition-transform duration-300">
+                <div class="card-body text-center flex flex-col items-center">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 text-primary text-2xl">
+                        <i class="fas fa-project-diagram"></i>
+                    </div>
+                    <h2 class="card-title text-xl mb-4">{{ tut.title }}</h2>
+                    <div class="mt-auto w-full">
+                        <a href="/tutorial/{{ tut.id }}" class="btn btn-primary w-full rounded-full shadow-md">Begin Scenario</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full text-center py-10 opacity-50 text-xl">No interactive modules currently available.</div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+
